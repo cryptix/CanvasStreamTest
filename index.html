@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>Websocket Canvas</title>
+<script language="javascript" type="text/javascript">
+
+  var wsUri = "ws://localhost:3001/ws";
+
+  function wsConnect()
+  {
+    var image = document.getElementById( "image" );
+
+    ws = new WebSocket( wsUri );
+    ws.onopen = function( e ) {
+      console.log( "CONNECTED" );
+      ws.send( "READY" );
+    };
+    ws.onclose = function( e ) { 
+      console.log( "DISCONNECTED" );
+    };
+    ws.onmessage = function( e ) {
+      // console.log( "image data!" );
+      image.setAttribute('src', 'data:image/png;base64,' + e.data);
+    };
+    ws.onerror = function( e ) {
+      console.log( 'WS Error: ' + e.data );
+    };
+  }
+
+  window.addEventListener( "load", wsConnect, false );
+
+</script>
+
+<body>
+    <h2>Websocket Canvas</h2>
+    <img id="image"/>
+</body>
+</html> 
