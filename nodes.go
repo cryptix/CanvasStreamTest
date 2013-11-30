@@ -53,7 +53,7 @@ func NewWorld(n, peers int, canvas *Canvas) *World {
 		canvas.DrawCircle(color.RGBA{22, 131, 201, 255}, node.Position, 5)
 	}
 	// blure is quite expensive
-	// canvas.Blur(1, new(WeightFunctionDist))
+	canvas.Blur(1, new(WeightFunctionDist))
 	// log.Print("Done.")
 
 	// log.Print("Drawing roads...")
