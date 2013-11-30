@@ -21,8 +21,9 @@
       console.log( "DISCONNECTED" );
     };
     ws.onmessage = function( e ) {
-      // console.log( "image data!" );
-      image.setAttribute('src', 'data:image/png;base64,' + e.data);
+      if (e.data == "NewImage") {
+        image.src = "/getImage?v=" + (new Date().getTime());
+      }
     };
     ws.onerror = function( e ) {
       console.log( 'WS Error: ' + e.data );

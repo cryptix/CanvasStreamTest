@@ -70,12 +70,11 @@ func NewWorld(n, peers int, cv *canvas.Canvas) *World {
 	return world
 }
 
-func (w *World) SendMessages(n int) {
-	for i := 0; i <= n; i++ {
-		city := w.Cities[i]
-		city.Power = 255
-		go city.Send()
-	}
+func (w *World) SendMessages() {
+	i := rand.Intn(len(w.Cities) - 1)
+	city := w.Cities[i]
+	city.Power = 255
+	go city.Send()
 }
 
 type Node struct {

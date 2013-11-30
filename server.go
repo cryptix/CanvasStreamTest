@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/base64"
 	"image"
 	"image/png"
 	"io"
@@ -15,58 +13,58 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func MakeGradientHandler(canvas *canvas.Canvas, tick <-chan bool) websocket.Handler {
+func MakeGradientHandler(cv *canvas.Canvas, tick <-chan bool) websocket.Handler {
 
 	return func(ws *websocket.Conn) {
 		for {
-
 			<-tick
-
-			imgBuf := new(bytes.Buffer)
-			imgEncoder := base64.NewEncoder(base64.StdEncoding, imgBuf)
-
-			// jpeg.Encode(imgEncoder, canvas, nil)
-			png.Encode(imgEncoder, canvas)
-
-			imgEncoder.Close()
-
-			io.Copy(ws, imgBuf)
-
+			io.WriteString(ws, "NewImage")
 		}
 	}
 }
 
+func getImage(resp http.ResponseWriter, req *http.Request) {
+	resp.Header().Set("Content-Type", "image/png")
+	png.Encode(resp, cv)
+}
+
+var (
+	world *World
+	cv    *canvas.Canvas
+)
+
 func main() {
 	tick := make(chan bool)
 
-	width, height := 640, 640
+	width, height := 1024, 1024
 
-	canvas := canvas.NewCanvas(image.Rect(0, 0, width, height))
+	cv = canvas.NewCanvas(image.Rect(0, 0, width, height))
 
-	n := 150
-	var world *World
+	n := 50
 
 	go func() {
 		for {
 			tick <- true
-			world = NewWorld(n, 6, canvas)
+			world = NewWorld(n, 6, cv)
 
 			time.Sleep(time.Second * 5)
-			n += 1
+			n += 5
 		}
 	}()
 
 	go func() {
 		for {
 			tick <- true
-			world.SendMessages(1)
+			world.SendMessages()
 
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(time.Second * 1)
 		}
 	}()
 
 	router := mux.NewRouter()
-	router.Handle("/ws", websocket.Handler(MakeGradientHandler(canvas, tick)))
+	router.Handle("/ws", websocket.Handler(MakeGradientHandler(cv, tick)))
+
+	router.HandleFunc("/getImage", getImage)
 
 	staticHandler := http.FileServer(http.Dir("."))
 	router.PathPrefix("/").Handler(staticHandler)
