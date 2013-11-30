@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"code.google.com/p/go.net/websocket"
+	"github.com/cryptix/canvas"
 	"github.com/gorilla/mux"
 )
 
-func MakeGradientHandler(canvas *Canvas, tick <-chan bool) websocket.Handler {
+func MakeGradientHandler(canvas *canvas.Canvas, tick <-chan bool) websocket.Handler {
 
 	return func(ws *websocket.Conn) {
 		for {
@@ -24,7 +25,9 @@ func MakeGradientHandler(canvas *Canvas, tick <-chan bool) websocket.Handler {
 			imgBuf := new(bytes.Buffer)
 			imgEncoder := base64.NewEncoder(base64.StdEncoding, imgBuf)
 
+			// jpeg.Encode(imgEncoder, canvas, nil)
 			png.Encode(imgEncoder, canvas)
+
 			imgEncoder.Close()
 
 			io.Copy(ws, imgBuf)
@@ -38,7 +41,7 @@ func main() {
 
 	width, height := 640, 640
 
-	canvas := NewCanvas(image.Rect(0, 0, width, height))
+	canvas := canvas.NewCanvas(image.Rect(0, 0, width, height))
 
 	n := 150
 	var world *World

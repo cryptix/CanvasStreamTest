@@ -7,25 +7,27 @@ import (
 	"math/rand"
 	"sort"
 	"time"
+
+	"github.com/cryptix/canvas"
 )
 
 type World struct {
-	Canvas   *Canvas
+	Canvas   *canvas.Canvas
 	Cities   []*Node
 	n, peers int
 }
 
-func NewWorld(n, peers int, canvas *Canvas) *World {
+func NewWorld(n, peers int, cv *canvas.Canvas) *World {
 	log.Println("Building new city.")
 	world := new(World)
 
-	wsize := canvas.Bounds().Size()
+	wsize := cv.Bounds().Size()
 
-	world.Canvas = canvas
-	canvas.DrawRect(
+	world.Canvas = cv
+	cv.DrawRect(
 		color.RGBA{0, 0, 0, 255},
-		Vector{0, 0},
-		Vector{float64(wsize.X), float64(wsize.Y)})
+		canvas.Vector{0, 0},
+		canvas.Vector{float64(wsize.X), float64(wsize.Y)})
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	world.Cities = make([]*Node, n)
@@ -50,17 +52,17 @@ func NewWorld(n, peers int, canvas *Canvas) *World {
 	// log.Print("Drawing citites...")
 	// Draw on circles representing nodes
 	for _, node := range world.Cities {
-		canvas.DrawCircle(color.RGBA{22, 131, 201, 255}, node.Position, 5)
+		cv.DrawCircle(color.RGBA{22, 131, 201, 255}, node.Position, 5)
 	}
 	// blure is quite expensive
-	canvas.Blur(1, new(WeightFunctionDist))
+	// canvas.Blur(1, new(WeightFunctionDist))
 	// log.Print("Done.")
 
 	// log.Print("Drawing roads...")
 	// Draw connections between nodes
 	for _, node := range world.Cities {
 		for _, peer := range node.Peers[:3] {
-			canvas.DrawLine(color.RGBA{0, 0, 0, 10}, node.Position, peer.Position)
+			cv.DrawLine(color.RGBA{0, 0, 0, 10}, node.Position, peer.Position)
 		}
 	}
 	log.Print("Done.")
@@ -69,11 +71,6 @@ func NewWorld(n, peers int, canvas *Canvas) *World {
 }
 
 func (w *World) SendMessages(n int) {
-
-	// start := rand.Intn(w.n) - n
-	// if start < 0 {
-	// 	start = 0
-	// }
 	for i := 0; i <= n; i++ {
 		city := w.Cities[i]
 		city.Power = 255
@@ -82,21 +79,21 @@ func (w *World) SendMessages(n int) {
 }
 
 type Node struct {
-	Position Vector
+	Position canvas.Vector
 	Ch       chan *Node
 	Peers    []*Node
-	Canvas   *Canvas
+	Canvas   *canvas.Canvas
 	Power    uint8
 }
 
-func NewNode(peers int, canvas *Canvas) *Node {
+func NewNode(peers int, cv *canvas.Canvas) *Node {
 	node := new(Node)
 	node.Peers = make([]*Node, 0, peers)
-	size := canvas.Bounds().Size()
+	size := cv.Bounds().Size()
 	x := float64(size.X) * rand.Float64()
 	y := float64(size.Y) * rand.Float64()
-	node.Position = Vector{x, y}
-	node.Canvas = canvas
+	node.Position = canvas.Vector{x, y}
+	node.Canvas = cv
 	node.Ch = make(chan *Node)
 	node.Power = 0
 	go node.Listen()
